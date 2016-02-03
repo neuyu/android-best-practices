@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Contact</string>
+    <string name="label_search">Search</string>
+    <string name="label_multiple_numbers">多个号码</string>
+</resources>

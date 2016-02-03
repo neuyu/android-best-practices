@@ -1,0 +1,15 @@
+<manifest package="com.neu.contact"
+          xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
+    <uses-permission android:name="android.permission.WRITE_CONTACTS"/>
+
+    <application>
+
+        <activity android:name=".contactui.ContactsPickerActivity"
+                  android:theme="@style/Theme.AppCompat.Light"/>
+
+    </application>
+
+</manifest>
