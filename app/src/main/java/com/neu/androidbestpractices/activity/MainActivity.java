@@ -39,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private List<ItemTest> getList() {
         List<ItemTest> list = new ArrayList<>();
+        list.add(new ItemTest("联系人模块",ContactActivity.class.getCanonicalName()));
 
         return list;
 
