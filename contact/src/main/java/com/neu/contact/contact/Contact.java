@@ -12,5 +12,7 @@ public interface Contact {
     void getContactsUI();
     //展示结果
     void onActivityResult(int requestCode, int resultCode, Intent data, ContactCallback callback);
+    //android 6.0的动态权限
+    void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults,PermissionResultCallback callback);
 
 }

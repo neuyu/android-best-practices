@@ -3,7 +3,6 @@ package com.neu.contact.contactui;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -28,12 +27,12 @@ public final class ContactsPickerActivity extends AppCompatActivity implements O
         super.onCreate(savedInstanceState);
         setContentView(R.layout.library_activity_contacts);
 
-        FragmentManager fragmentManager = this.getSupportFragmentManager();
-        FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-        ContactsListFragment fragment = new ContactsListFragment();
-
-        fragmentTransaction.replace(R.id.fragment_container, fragment);
-        fragmentTransaction.commit();
+        if (savedInstanceState == null) {
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            ContactsListFragment fragment = new ContactsListFragment();
+            transaction.replace(R.id.fragment_container, fragment);
+            transaction.commit();
+        }
 
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -41,6 +40,8 @@ public final class ContactsPickerActivity extends AppCompatActivity implements O
             actionBar.setTitle("Select contact");
         }
     }
+
+
 
     /**
      * Callback when the contact is selected from the list of contacts.

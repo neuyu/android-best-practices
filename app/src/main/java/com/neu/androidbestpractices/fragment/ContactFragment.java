@@ -9,6 +9,7 @@ import com.neu.androidbestpractices.R;
 import com.neu.androidbestpractices.fragment.base.BaseFragment;
 import com.neu.contact.ContactFactory;
 import com.neu.contact.contact.ContactCallback;
+import com.neu.contact.contact.PermissionResultCallback;
 
 import butterknife.Bind;
 import butterknife.OnClick;
@@ -16,7 +17,7 @@ import butterknife.OnClick;
 /**
  * Created by neu on 16/2/3.
  */
-public class ContactFragment extends BaseFragment {
+public class ContactFragment extends BaseFragment{
     @Bind(R.id.contact)
     Button mContact;
     @Bind(R.id.text)
@@ -29,12 +30,9 @@ public class ContactFragment extends BaseFragment {
             case R.id.contact:
 
                 ContactFactory.newContact(this).getContacts();
-
                 break;
             case R.id.contactUI:
-
                 ContactFactory.newContact(this).getContactsUI();
-
                 break;
         }
     }
@@ -43,6 +41,7 @@ public class ContactFragment extends BaseFragment {
     protected int getFragmentLayout() {
         return R.layout.fragment_contact;
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -58,5 +57,16 @@ public class ContactFragment extends BaseFragment {
             }
         });
 
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        ContactFactory.newContact(this).onRequestPermissionsResult(requestCode, permissions, grantResults, new PermissionResultCallback() {
+
+            @Override
+            public void denyPermission() {
+                mText.setText("用户已经拒绝");
+            }
+        });
     }
 }

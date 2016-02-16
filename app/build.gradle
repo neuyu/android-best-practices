@@ -28,4 +28,5 @@ dependencies {
     compile 'com.jakewharton:butterknife:7.0.1'
     compile 'com.android.support:design:23.1.1'
     compile project(':contact')
+    compile project(':httpclient')
 }

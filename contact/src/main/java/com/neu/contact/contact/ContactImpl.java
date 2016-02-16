@@ -1,22 +1,26 @@
 package com.neu.contact.contact;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.neu.contact.constants.Constants;
 import com.neu.contact.contactui.ContactsPickerActivity;
+import com.neu.contact.util.PermissionUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -26,8 +30,18 @@ import java.util.List;
  * Contact接口的实现类
  */
 public final class ContactImpl implements Contact {
-    //号码类型
-    private static final int PHONE_TYPE = 2;
+    /**
+     * Id to identify a contacts permission request.
+     */
+    private static final int REQUEST_CONTACTS = 1;
+
+    /**
+     * Permissions required to read and write contacts. Used by the {@link ContactImpl}.
+     */
+    private static String[] PERMISSIONS_CONTACT = {Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS};
+
+
     //持有activity
     private Activity mActivity;
     //持有fragment
@@ -49,42 +63,87 @@ public final class ContactImpl implements Contact {
     }
 
     public ContactImpl(Fragment fragment) {
+        mActivity = fragment.getActivity();
         mSupportFragment = fragment;
     }
 
     public ContactImpl(android.app.Fragment fragment) {
+        mActivity = fragment.getActivity();
         mFragment = fragment;
     }
 
     @Override
     public void getContacts() {
-        //判断传入的activity还是fragment
-        if (mActivity != null) {
-            Intent intent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
-            mActivity.startActivityForResult(intent, 2);
-        } else if (mFragment != null) {
+        //检查是否具有该权限
+        checkPremission();
+    }
+
+    /**
+     * 跳转到app 内置应用
+     */
+    private void startContact() {
+        if (mFragment != null) {
             Intent intent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
             mFragment.startActivityForResult(intent, 2);
-        } else {
+        } else if (mSupportFragment != null) {
             Intent intent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
             mSupportFragment.startActivityForResult(intent, 2);
+        } else {
+            Intent intent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+            mActivity.startActivityForResult(intent, 2);
+        }
+    }
+
+    /**
+     * 检查是否具有该权限
+     */
+    private void checkPremission() {
+        //当Android6.0以下，申明了权限，直接startIntent()
+        // TODO: 16/2/16 当小米等国产手机具有权限管理功能
+        if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Contacts permissions have not been granted.
+            requestContactsPermissions();
+
+        } else {
+            // Contact permissions have been granted. Show the contacts fragment.
+            startContact();
+        }
+    }
+
+    /**
+     * 6.0以上的，弹出权限选择框
+     */
+    @SuppressLint("NewApi")
+    private void requestContactsPermissions() {
+        //判断该权限是否需要
+        if (mFragment != null) {
+            mFragment.requestPermissions(PERMISSIONS_CONTACT, REQUEST_CONTACTS);
+        } else if (mSupportFragment != null) {
+            mSupportFragment.requestPermissions(PERMISSIONS_CONTACT, REQUEST_CONTACTS);
+        } else {
+            ActivityCompat.requestPermissions(mActivity, PERMISSIONS_CONTACT, REQUEST_CONTACTS);
         }
     }
 
     @Override
     public void getContactsUI() {
         //判断传入的是activity还是fragment还是v4 fragment
-        if (mActivity != null) {
+        if (mSupportFragment != null) {
+            Intent intent = new Intent(mActivity, ContactsPickerActivity.class);
+            mSupportFragment.startActivityForResult(intent, 1);
+        } else if (mFragment != null) {
+            Intent intent = new Intent(mActivity, ContactsPickerActivity.class);
+            mFragment.startActivityForResult(intent, 1);
+        } else {
             Intent intent = new Intent(mActivity, ContactsPickerActivity.class);
             mActivity.startActivityForResult(intent, 1);
-        } else if (mSupportFragment != null) {
-            Intent intent = new Intent(mSupportFragment.getActivity(), ContactsPickerActivity.class);
-            mSupportFragment.startActivityForResult(intent, 1);
-        } else {
-            Intent intent = new Intent(mFragment.getActivity(), ContactsPickerActivity.class);
-            mFragment.startActivityForResult(intent, 1);
         }
+
     }
+
     // TODO: 2015/12/31 fragment和activity 启动另外一个activity 的效果是不一样的
 
     @Override
@@ -102,19 +161,35 @@ public final class ContactImpl implements Contact {
     }
 
     /**
+     * 处理权限结果
+     * @param requestCode   发送号码
+     * @param permissions   权限数组
+     * @param grantResults  返回结果
+     * @param callback  否决回调
+     */
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults, PermissionResultCallback callback) {
+        if (requestCode == REQUEST_CONTACTS) {
+            // We have requested multiple permissions for contacts, so all of them need to be
+            // checked.
+            if (PermissionUtil.verifyPermissions(grantResults)) {
+                // All required permissions have been granted, display contacts fragment.
+                startContact();
+            } else {
+                callback.denyPermission();
+            }
+
+        }
+    }
+
+    /**
      * 获取联系人信息
      *
      * @param data 点击联系人返回的结果
      */
     private void getContactPhone(Intent data) {
         Uri contactData = data.getData();
-        Cursor cursor;
-        if (mFragment != null) {
-            mActivity = mFragment.getActivity();
-        } else if (mSupportFragment != null) {
-            mActivity = mSupportFragment.getActivity();
-        }
-        cursor = mActivity
+        Cursor cursor = mActivity
                 .getContentResolver()
                 .query(contactData, null, null, null, null);
         if (cursor == null || cursor.getCount() < 1) {
@@ -124,6 +199,12 @@ public final class ContactImpl implements Contact {
         }
     }
 
+    /**
+     * 返回结果
+     * @param result    获取联系人是否成功
+     * @param errCode   错误码
+     * @param errMsg    错误信息
+     */
     private void sendBackResult(boolean result, int errCode, String errMsg) {
         if (!result) {
             mContactCallback.onFailed(errCode, errMsg);
@@ -134,6 +215,10 @@ public final class ContactImpl implements Contact {
         }
     }
 
+    /**
+     * 处理cursor
+     * @param cursor    查询游标
+     */
     private void handleCursor(Cursor cursor) {
         cursor.moveToFirst();
         int phoneCount = cursor.getInt(cursor.getColumnIndex(Contacts.HAS_PHONE_NUMBER));
@@ -177,7 +262,7 @@ public final class ContactImpl implements Contact {
                 .create();
         mDialog.setTitle("请选择手机号码");
         listView.setAdapter(new ArrayAdapter<String>(mActivity, android.R.layout.simple_expandable_list_item_1, mPhoneNumList));
-        listView.setOnItemClickListener(new OnItemClickListener() {
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 if (mDialog.isShowing()) {
@@ -190,4 +275,5 @@ public final class ContactImpl implements Contact {
 
         mDialog.show();
     }
+
 }
