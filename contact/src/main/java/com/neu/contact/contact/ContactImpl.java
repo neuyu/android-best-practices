@@ -1,7 +1,6 @@
 package com.neu.contact.contact;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -9,6 +8,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.provider.ContactsContract;
 import android.provider.ContactsContract.Contacts;
 import android.support.v4.app.ActivityCompat;
@@ -99,7 +99,6 @@ public final class ContactImpl implements Contact {
      */
     private void checkPremission() {
         //当Android6.0以下，申明了权限，直接startIntent()
-        // TODO: 16/2/16 当小米等国产手机具有权限管理功能
         if (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.READ_CONTACTS)
                 != PackageManager.PERMISSION_GRANTED
                 || ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_CONTACTS)
@@ -116,14 +115,18 @@ public final class ContactImpl implements Contact {
     /**
      * 6.0以上的，弹出权限选择框
      */
-    @SuppressLint("NewApi")
     private void requestContactsPermissions() {
         //判断该权限是否需要
-        if (mFragment != null) {
+        if (mFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             mFragment.requestPermissions(PERMISSIONS_CONTACT, REQUEST_CONTACTS);
-        } else if (mSupportFragment != null) {
+        } else if (mSupportFragment != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             mSupportFragment.requestPermissions(PERMISSIONS_CONTACT, REQUEST_CONTACTS);
         } else {
+            //Android6.0以上的手机启动contact,且是activity启动的
+            //Android6.0以下的手机，具有权限管理，且关闭了app的联系人权限
+            // TODO: 16/2/17 当Android6.0以下手机调用方必须是在其activity中实现OnRequestPermissionsResultCallback，且调用contact的onRequestPermissionsResult
+            //不实现OnRequestPermissionsResultCallback的话，无法接收消息，fragmentactivity实现了该接口
+            //所以当你的activity是fragmentactivity的子类或者appcompatActivity的子类，可以不实现其接口
             ActivityCompat.requestPermissions(mActivity, PERMISSIONS_CONTACT, REQUEST_CONTACTS);
         }
     }
@@ -143,8 +146,6 @@ public final class ContactImpl implements Contact {
         }
 
     }
-
-    // TODO: 2015/12/31 fragment和activity 启动另外一个activity 的效果是不一样的
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data, ContactCallback callback) {
