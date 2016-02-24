@@ -19,6 +19,7 @@ import butterknife.ButterKnife;
  * Created by neu on 16/2/3.
  */
 public abstract class BaseActivity extends AppCompatActivity {
+
     @Bind(R.id.toolBar)
     Toolbar mToolBar;
     @Bind(R.id.collapsing_toolbar)

@@ -5,7 +5,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:2.0.0-beta4'
+        classpath 'com.android.tools.build:gradle:2.0.0-beta5'
         classpath 'com.neenbedankt.gradle.plugins:android-apt:1.8'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -42,6 +42,7 @@ subprojects{
         dependencies {
             testCompile 'junit:junit:4.12'
             compile 'com.android.support:appcompat-v7:23.1.1'
+
         }
         apply from: '../gradle/maven_push.gradle'
     }

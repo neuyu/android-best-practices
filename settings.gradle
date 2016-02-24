@@ -1,1 +1,1 @@
-include ':app', ':contact', ':httpclient'
+include ':app', ':contact', ':httpclient',':qrcode'

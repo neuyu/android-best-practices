@@ -1,13 +1,16 @@
 package com.neu.androidbestpractices.fragment;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.neu.androidbestpractices.R;
 import com.neu.androidbestpractices.fragment.base.BaseFragment;
 import com.neu.contact.ContactFactory;
+import com.neu.contact.contact.Contact;
 import com.neu.contact.contact.ContactCallback;
 import com.neu.contact.contact.PermissionResultCallback;
 
@@ -19,7 +22,7 @@ import butterknife.OnClick;
  */
 public class ContactFragment extends BaseFragment{
     @Bind(R.id.contact)
-    Button mContact;
+    Button mContactButton;
     @Bind(R.id.text)
     TextView mText;
     @Bind(R.id.contactUI)
@@ -29,23 +32,30 @@ public class ContactFragment extends BaseFragment{
         switch (button.getId()){
             case R.id.contact:
 
-                ContactFactory.newContact(this).getContacts();
+                mContact.getContacts();
                 break;
             case R.id.contactUI:
-                ContactFactory.newContact(this).getContactsUI();
+
+                mContact.getContactsUI();
                 break;
         }
     }
+
+    private Contact mContact;
 
     @Override
     protected int getFragmentLayout() {
         return R.layout.fragment_contact;
     }
 
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        mContact = ContactFactory.newContact(this);
+    }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        ContactFactory.newContact(this).onActivityResult(requestCode, resultCode, data, new ContactCallback() {
+        mContact.onActivityResult(requestCode, resultCode, data, new ContactCallback() {
             @Override
             public void onSuccess(@NonNull String contactNumber, @NonNull String contactName) {
                 mText.setText(contactName + contactNumber);
@@ -61,7 +71,7 @@ public class ContactFragment extends BaseFragment{
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        ContactFactory.newContact(this).onRequestPermissionsResult(requestCode, permissions, grantResults, new PermissionResultCallback() {
+        mContact.onRequestPermissionsResult(requestCode, permissions, grantResults, new PermissionResultCallback() {
 
             @Override
             public void denyPermission() {

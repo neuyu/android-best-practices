@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">AndroidBestPractices</string>
+    <string name="phone_number">手机号：</string>
+    <string name="dynamic_password">验证码：</string>
+    <string name="send_dynamic_code">发送验证码</string>
+
 </resources>
